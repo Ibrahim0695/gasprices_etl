@@ -1,22 +1,29 @@
 import http.client
 import json
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def extract_prices():
+    api_key = os.getenv("COLLECTAPI_KEY")
+    if not api_key:
+        raise RuntimeError("COLLECTAPI_KEY must be set in the environment or .env file.")
+
     conn = http.client.HTTPSConnection("api.collectapi.com")
 
     headers = {
-        'content-type': "application/json",
-        'authorization': "apikey 5hqygBScH1ifb1p6OdZodL:6uYLDoWQxkYaI5r4oHoxvr"
-        }
+        "content-type": "application/json",
+        "authorization": f"apikey {api_key}",
+    }
 
-    conn.request("GET", "/gasPrice/stateUsaPrice?state=WA", headers=headers)
+    try:
+        conn.request("GET", "/gasPrice/stateUsaPrice?state=WA", headers=headers)
 
-    res = conn.getresponse()
-    data = res.read()
+        response = conn.getresponse()
+        data = response.read()
+    finally:
+        conn.close()
 
-    print(data.decode("utf-8"))
-    data_string = data.decode("utf-8")
-    data_list = json.loads(data_string)
-
-
-    return data_list
+    return json.loads(data.decode("utf-8"))
